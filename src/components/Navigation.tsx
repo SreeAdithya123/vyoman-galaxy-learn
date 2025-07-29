@@ -9,9 +9,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export const Navigation = () => {
-  const navLinks = ["Home", "Content Library", "Leaderboard", "Members"];
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const navLinks = [
+    { name: "Home", path: "/" },
+    { name: "Content Library", path: "/content-library" },
+    { name: "Leaderboard", path: "/leaderboard" },
+    { name: "Members", path: "/members" }
+  ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
@@ -26,10 +42,15 @@ export const Navigation = () => {
           <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <button
-                key={link}
-                className="text-foreground/80 hover:text-foreground transition-colors font-medium"
+                key={link.name}
+                onClick={() => navigate(link.path)}
+                className={`transition-colors font-medium ${
+                  location.pathname === link.path
+                    ? "text-primary font-semibold"
+                    : "text-foreground/80 hover:text-foreground"
+                }`}
               >
-                {link}
+                {link.name}
               </button>
             ))}
           </nav>
@@ -46,35 +67,43 @@ export const Navigation = () => {
 
         {/* Right Actions */}
         <div className="flex items-center gap-4">
-          {/* Notification Bell */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-neon-green rounded-full"></span>
-          </Button>
-
-          {/* Profile Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="gap-2 px-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder.svg" />
-                  <AvatarFallback className="bg-gradient-primary text-primary-foreground">
-                    VU
-                  </AvatarFallback>
-                </Avatar>
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          {user ? (
+            <>
+              {/* Notification Bell */}
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 h-3 w-3 bg-neon-green rounded-full"></span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem>View Profile</DropdownMenuItem>
-              <DropdownMenuItem>Edit Profile</DropdownMenuItem>
-              <DropdownMenuItem>Notifications</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
+              {/* Profile Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="gap-2 px-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="/placeholder.svg" />
+                      <AvatarFallback className="bg-gradient-primary text-primary-foreground">
+                        {user.email?.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem>View Profile</DropdownMenuItem>
+                  <DropdownMenuItem>Edit Profile</DropdownMenuItem>
+                  <DropdownMenuItem>Notifications</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-destructive" onClick={handleSignOut}>
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <Button onClick={() => navigate("/auth")} className="bg-gradient-primary hover:opacity-90">
+              Sign In
+            </Button>
+          )}
         </div>
       </div>
     </header>
